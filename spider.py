@@ -1,19 +1,23 @@
-# author: HuYong
-# coding=utf-8
+# -*- coding: utf-8 -*-
+# author: HuYong, MikeHuang
+
 import os
 import sys
 import urllib
 import datetime
 import requests
+import shutil
 from lxml import etree
-from ZhengFang.parseHtml import  getClassScheduleFromHtml, getStudentInfor, get__VIEWSTATE, getGrade
-from ZhengFang.model import Student, db, ClassSchedule, Class, YearGrade, OneLessonGrade, TermGrade
+from identifyCode import *
+from parseHtml import getSelectUrl, getClassScheduleFromHtml, getStudentInfor, get__VIEWSTATE, getGrade
+from model import Student, db, ClassSchedule, Class, YearGrade, OneLessonGrade, TermGrade
 
 class ZhengFangSpider:
 
-    def __init__(self,student,baseUrl="http://202.195.144.168/jndx"):
+    def __init__(self,student,baseUrl="http://jxgl.bjmu.edu.cn"):
         reload(sys)
         sys.setdefaultencoding("utf-8")
+        self.trial = 0
         self.student = student
         self.baseUrl = baseUrl
         self.session = requests.session()
@@ -22,64 +26,61 @@ class ZhengFangSpider:
 
     #含验证码登陆
     def login(self):
+        MAXTRIAL =10
+        self.trial += 1
         loginurl = self.baseUrl+"/default2.aspx"
         response = self.session.get(loginurl)
         selector = etree.HTML(response.content)
-        __VIEWSTATE = selector.xpath('//*[@id="form1"]/input/@value')[0]
+        input_values = selector.xpath('//*[@id="form1"]/input/@value')
+        __VIEWSTATE = input_values[0]
+        __VIEWSTATEGENERATOR = input_values[1]
         imgUrl = self.baseUrl+"/CheckCode.aspx?"
         imgresponse = self.session.get(imgUrl, stream=True)
         image = imgresponse.content
-        DstDir = os.getcwd() + "\\"
-        print("保存验证码到：" + DstDir + "code.jpg" + "\n")
+        DstDir = os.path.join(os.path.dirname(__file__), "code.jpg")
+        print("保存验证码到：" + DstDir + "\n")
         try:
-            with open(DstDir + "code.jpg", "wb") as jpg:
+            with open(DstDir, "wb") as jpg:
                 jpg.write(image)
         except IOError:
             print("IO Error\n")
-        finally:
-            jpg.close
-        code = raw_input("验证码是：")
-        RadioButtonList1 = u"学生".encode('gb2312', 'replace')
+        if self.trial == MAXTRIAL:
+            code = raw_input("验证码是：")
+        else:
+            #　以下为验证码测试部分
+            #shutil.move(DstDir, './test_images/' + code + '.jpg')
+            loadTrainData()
+            code = getAllOcr(DstDir)
+        RadioButtonList1 = u"学生".encode('gb2312')
         data = {
-            "RadioButtonList1": RadioButtonList1,
             "__VIEWSTATE": __VIEWSTATE,
-            "TextBox1": self.student.studentnumber,
+            "__VIEWSTATEGENERATOR": __VIEWSTATEGENERATOR,
+            "txtUserName": self.student.studentnumber,
+            "Textbox1": "",
             "TextBox2": self.student.password,
-            "TextBox3": code,
+            "txtSecretCode": code,
+            "RadioButtonList1": RadioButtonList1,
             "Button1": "",
-            "lbLanguage": ""
+            "lbLanguage": "",
+            "hidPdrs": "",
+            "hidsc": ""
         }
         # 登陆教务系统
-        Loginresponse = self.session.post(loginurl, data=data)
-        if Loginresponse.status_code == requests.codes.ok:
-            print "成功进入教务系统！"
-
-
-    #绕过验证码登陆
-    def loginWithOutCode(self):
-        loginurl = self.baseUrl + "/default5.aspx"
-        response = self.session.get(loginurl)
-        selector = etree.HTML(response.content)
-        __VIEWSTATE = selector.xpath('//*[@id="form1"]/input/@value')[0]
-        RadioButtonList1 = u"学生".encode('gb2312', 'replace')
-        data = {
-            "RadioButtonList1": RadioButtonList1,
-            "__VIEWSTATE": __VIEWSTATE,
-            "TextBox1": self.student.studentnumber,
-            "TextBox2": self.student.password,
-            "Button1": "",
-        }
-        # 登陆教务系统
-        Loginresponse = self.session.post(loginurl, data=data)
-        if Loginresponse.status_code == requests.codes.ok:
-            print "成功进入教务系统！"
+        self.session.headers["Referer"] = self.baseUrl + '/'
+        self.Loginresponse = self.session.post(loginurl, data=data)
+        if self.Loginresponse.url == u"http://jxgl.bjmu.edu.cn/xs_main.aspx?xh=" + self.student.studentnumber:
+            return self.Loginresponse
+        elif self.trial < MAXTRIAL:
+            return self.login()
+        else:
+            return None
 
 
     #获取学生基本信息
     def getStudentBaseInfo(self):
         self.session.headers['Referer'] = self.baseUrl+"/xs_main.aspx?xh="+self.student.studentnumber
-        url = self.baseUrl+"/xsgrxx.aspx?xh="+self.student.studentnumber+"&"
-        response = self.session.get(url)
+        url = getSelectUrl(self.Loginresponse, u"个人信息")
+        response = self.session.get(self.baseUrl + '/' + url)
         d = getStudentInfor(response)
         self.student.idCardNumber =d["idCardNumber"]
         self.student.name =d["name"]
@@ -96,7 +97,7 @@ class ZhengFangSpider:
         self.student.classname =d["classname"]
         self.student.gradeClass =d["gradeClass"]
         self.student.save()
-        print "读取学生基本信息成功"
+        return 'ok'
 
 
     #获取学生课表
@@ -175,7 +176,7 @@ class ZhengFangSpider:
             oneLessonGrade = OneLessonGrade(term=termGrade, name=onegrade["name"], type=onegrade["type"],
                                             credit=float(onegrade["credit"]), gradePoint=gradePoint, grade=onegrade["grade"])
             oneLessonGrade.save()
-        print "获取成绩成功"
+        return 'ok'
 
 
     # 计算每学期，每学年的绩点
@@ -213,18 +214,18 @@ if __name__ == "__main__":
     try:
         db.connect()
         db.create_tables([Student, ClassSchedule,Class,YearGrade,TermGrade,OneLessonGrade])
-    except:
-        pass
+    except Exception:
+        print Exception.message
 
     # 查找学生，若不存在则创建账号
     try:
         student = Student.get(Student.studentnumber == "xxxxxxxx")
-    except Exception ,e:
+    except Exception, e:
         student = Student(studentnumber="xxxxxxxx", password="xxxxxxxxx")#用自己的教务系统账号密码
         student.save()
 
-    spider = ZhengFangSpider(student,baseUrl="http://202.195.144.168/jndx") # 实例化爬虫
-    spider.loginWithOutCode()
+    spider = ZhengFangSpider(student) # 实例化爬虫
+    spider.login()
     if student.name is None:
         spider.getStudentBaseInfo()
     spider.getStudentGrade()

@@ -1,0 +1,13 @@
+*.py[cod]
+
+# database
+*.db
+
+# unittest
+test[._]*
+
+venv/
+
+.idea/
+
+code*

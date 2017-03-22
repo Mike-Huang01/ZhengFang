@@ -1,46 +1,34 @@
-# 正方教务系统助手
-The helper of ZhengFang System 欢迎fork/star
-具体参见：http://blog.csdn.net/nghuyong/article/details/52203443
-## 1.项目定义
-这个项目实现了正方教务系统的一套API：
-包括模拟登陆，个人信息查询，课表获取，成绩查询等等。
-随着API的不断完善于扩充，可以很方便的作为后台服务。
-比如教务系统手机客户端，桌面客户端，也可以作为某些特定应用需要学生课表，信息的后台。
+# 正方教务系统助手 PKUHSC 版
+* Mike Huang
 
-同时这个项目定义为助手，会继续开发便捷的工具：
-* 自动完成评教任务
-* 期末新的成绩公布，邮件通知
-* 分学期，分学年绩点计算
-* 公选课抢课功能
+The helper of ZhengFang System PKUHSC 欢迎fork/star<br>
+原项目具体参见：[*csdn-nghuyong*](http://blog.csdn.net/nghuyong/article/details/52203443)<br>
+验证码识别模块来自：[*github-west*](https://github.com/west000/IdentifyVerificationCode.git)
+
+## 1.项目定义
+这个项目修改了原项目的一些请求参数以适应北医正方系统，并且利用验证码识别模块自动识别验证码
 
 ## 2.项目依赖
 * 爬虫相关：requests
-* 网页解析：lxml,BeautifulSoup
+* 网页解析：lxml,　bs4
 * 数据存储：peewee
 * 数据库：Sqlite
+* 图像处理：pillow
 
 ## 3.项目结构
 1. ZhengFang.db 数据库
 2. model.py 模型层，通过ORM与数据库相连
 3. spider.py 业务层，网页爬虫，**项目入口**
 4. parseHtml.py 业务层，网页解析工具
+4. identifyCode.py 验证码自动识别
 
 
 ## 4.项目功能
-项目均已江南大学正方教务系统为例测试。若在你学校测试不通过欢迎开issue。
 ### 4.1模拟登陆
-登陆有两种方式
-
-1. 默认登陆：
-
-需要处理验证码。将验证码下载到本地。code.jpg。人工识别验证码后，手动输入验证码。实现登陆。
-
-2. 绕过验证码登陆：
-
-由于正方教务系统的漏洞在若存在**default5.asp**页面，可以不用验证码直接登陆。可以从default3，default4，都试一试。
+目前验证码识别正确率约为40%，后台会尝试10次，如仍无法识别需要手动输入（测试情况良好）
 
 ### 4.2个人信息获取
-通过教务系统个人信息页面，抓取，个人信息（真的有很多信息！）并持久化保存到数据库中。
+通过教务系统个人信息页面，抓取，个人信息，并持久化保存到数据库中。
 
 ### 4.3课表获取
 通过抓取的个人信息读到学生入学的年份，在结合当前时间，就可以知道能够抓取到哪些学期的课表。
@@ -66,6 +54,9 @@ The helper of ZhengFang System 欢迎fork/star
 ### 4.5分学期分学年绩点计算
 
 根据抓取下来的成绩，通过（总的（学分*绩点）/总的学分）分别计算各个学期的绩点与各个学年的绩点
+
+## 5 测试进度（*PKUHSC正方*）
+2017-3-22 完成login, getStudentBaseInfo
 
 
 

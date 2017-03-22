@@ -1,6 +1,22 @@
-# author: HuYong
-# coding=utf-8
+# -*- coding: utf-8 -*-
+# author: HuYong, MikeHuang
+
 from bs4 import BeautifulSoup
+from urllib import quote
+
+
+# 从网页中解析完整跳转链接
+def getSelectUrl(response, text):
+    html = response.content.decode("gb2312")
+    soup = BeautifulSoup(html.decode("utf-8"), "html5lib")
+    links = soup.select('ul a')
+    selectUrl = [link for link in links if link.string == text][0]['href']
+    paramlist = selectUrl.split('&')
+    unicodename = paramlist[1][3:]
+    urlname = quote(unicodename.encode())
+    paramlist[1] = 'xm=' + urlname
+    return '&'.join(paramlist)
+
 
 
 # 从网页中解析学生信息
@@ -8,20 +24,23 @@ def getStudentInfor(response):
     html = response.content.decode("gb2312")
     soup = BeautifulSoup(html.decode("utf-8"), "html5lib")
     d = {}
-    d["studentnumber"] = soup.find(id="xh").string
-    d["idCardNumber"] = soup.find(id="lbl_sfzh").string
-    d["name"] = soup.find(id="xm").string
-    d["sex"] = soup.find(id="lbl_xb").string
-    d["enterSchoolTime"] = soup.find(id="lbl_rxrq").string
-    d["birthsday"] = soup.find(id="lbl_csrq").string
-    d["highschool"] = soup.find(id="lbl_byzx").string
-    d["nationality"] = soup.find(id="lbl_mz").string
-    d["hometown"] = soup.find(id="lbl_jg").string
-    d["politicsStatus"] = soup.find(id="lbl_zzmm").string
-    d["college"] = soup.find(id="lbl_xy").string
-    d["major"] = soup.find(id="lbl_zymc").string
-    d["classname"] = soup.find(id="lbl_xzb").string
-    d["gradeClass"] = soup.find(id="lbl_dqszj").string
+    d["studentnumber"] = soup.find(id="xh")
+    d["idCardNumber"] = soup.find(id="lbl_sfzh")
+    d["name"] = soup.find(id="xm")
+    d["sex"] = soup.find(id="lbl_xb")
+    d["enterSchoolTime"] = soup.find(id="lbl_rxrq")
+    d["birthsday"] = soup.find(id="lbl_csrq")
+    d["highschool"] = soup.find(id="lbl_byzx")
+    d["nationality"] = soup.find(id="lbl_mz")
+    d["hometown"] = soup.find(id="lbl_jg")
+    d["politicsStatus"] = soup.find(id="lbl_zzmm")
+    d["college"] = soup.find(id="lbl_xy")
+    d["major"] = soup.find(id="lbl_zymc")
+    d["classname"] = soup.find(id="lbl_xzb")
+    d["gradeClass"] = soup.find(id="lbl_dqszj")
+    for k,v in d.items():
+        if v != None:
+            d[k] = v.string
     return d
 
 

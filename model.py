@@ -1,5 +1,6 @@
+# -*- coding: utf-8 -*-
 # author: HuYong
-# coding=utf-8
+
 
 from peewee import *
 
