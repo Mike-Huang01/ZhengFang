@@ -1,0 +1,14 @@
+appdirs==1.4.3
+beautifulsoup4==4.5.3
+bs4==0.0.1
+html5lib==0.999999999
+lxml==3.7.3
+olefile==0.44
+packaging==16.8
+peewee==2.9.1
+Pillow==4.0.0
+pkg-resources==0.0.0
+pyparsing==2.2.0
+requests==2.13.0
+six==1.10.0
+webencodings==0.5
