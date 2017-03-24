@@ -40,12 +40,17 @@ class ClassSchedule(Model):
 
 class Class(Model):
     schedule = ForeignKeyField(ClassSchedule, related_name="classes")  # 归属课表
+    selectClassCode = CharField(null=True)
+    classNo = CharField(null=True)
     name = CharField(null=True)  # 课程名称
     type = CharField(null=True)  # 课程性质
+    Compulsory = CharField(null=True) #　是否必修课
+    teacher = CharField(null=True)  # 授课教师
+    point = CharField(null=True) #　学分
+    totalTimeInWeek = CharField(null=True) #　周学时
     timeInTheWeek = CharField(null=True)  # 星期几
     timeInTheDay = CharField(null=True)  # 第几节课
     timeInTheTerm = CharField(null=True)  # 上课周数
-    teacher = CharField(null=True)  # 授课教师
     location = CharField(null=True)  # 授课地点
 
     class Meta:

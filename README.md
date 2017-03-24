@@ -56,7 +56,8 @@ The helper of ZhengFang System PKUHSC 欢迎fork/star<br>
 根据抓取下来的成绩，通过（总的（学分*绩点）/总的学分）分别计算各个学期的绩点与各个学年的绩点
 
 ## 5 测试进度（*PKUHSC正方*）
-2017-3-22 完成login, getStudentBaseInfo
+* 2017-3-22 完成login, getStudentBaseInfo
+* 2017-3-24 完成课表抓取测试
 
 
 

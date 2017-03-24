@@ -103,38 +103,55 @@ class ZhengFangSpider:
     #获取学生课表
     def getClassSchedule(self):
         self.session.headers['Referer'] = self.baseUrl+"/xs_main.aspx?xh="+self.student.studentnumber
-        url = self.baseUrl+"/xskbcx.aspx?xh=" + self.student.studentnumber + "&xm=" + self.student.urlName + "&gnmkdm=N121603"
-        response = self.session.get(url, allow_redirects=False)
-        __VIEWSTATE = getClassScheduleFromHtml(response)["__VIEWSTATE"]
+        url = self.baseUrl + "/xsxkqk.aspx?xh=" + self.student.studentnumber + "&xm=" + self.student.urlName + "&gnmkdm=N121615"
+        response = self.session.get(url)
+        parsedict = getClassScheduleFromHtml(response)
+        __VIEWSTATE = parsedict["__VIEWSTATE"]
+        __EVENTTARGET = "ddlXQ"
         year = int(self.student.gradeClass)
         term = 1
         today = datetime.date.today()
         while today.year>year or (today.year==year and today.month>=7 and term==1):
             data = {
-                "__EVENTTARGET": "xqd",
+                "__EVENTTARGET": __EVENTTARGET,
                 "__EVENTARGUMENT": "",
+                "__VIEWSTATEGENERATOR" : "FDD5582C",
                 "__VIEWSTATE": __VIEWSTATE,
-                "xnd": str(year)+"-"+str(year+1),
-                "xqd": str(term),
+                "ddLXN": str(year)+"-"+str(year+1),
+                "ddLXQ": str(term),
             }
             self.session.headers['Referer'] = url
             response = self.session.post(url,data)
             print "正在获取"+str(year)+"-"+str(year+1)+"学年第"+str(term)+"学期课表"
-            classes = getClassScheduleFromHtml(response)["classes"]
+            parsedict = getClassScheduleFromHtml(response)
+            if parsedict != None:
+                classes = parsedict["classes"]
+            else:
+                continue
             __VIEWSTATE = getClassScheduleFromHtml(response)["__VIEWSTATE"]
             classSchedule = ClassSchedule(student=self.student,year=str(year)+"-"+str(year+1),term=term)
             classSchedule.save()
             for each in classes:
-                oneClass = Class(schedule = classSchedule , name = each["name"] , type = each["type"] ,
-                                 timeInTheWeek = each["timeInTheWeek"],timeInTheDay = each["timeInTheDay"] , timeInTheTerm = each["timeInTheTerm"],
-                                 teacher = each["teacher"] , location = each["location"]
-                                 )
+                #debug
+                #try:
+                oneClass = Class(schedule=classSchedule , selectClassCode=each["selectClassCode"],
+                             classNo=each["classNo"],name=each["name"], type=each["type"],
+                             Compulsory= each["Compulsory"],teacher=each["teacher"], point=each["point"],
+                             totalTimeInWeek=each["totalTimeInWeek"], timeInTheWeek = each["timeInTheWeek"],
+                             timeInTheDay = each["timeInTheDay"], timeInTheTerm=each["timeInTheTerm"],
+                             location=each["location"])
                 oneClass.save()
+                #except KeyError as e:
+                    #print each
+                    #raise KeyError
             term = term + 1
             if term>2:
                 term = 1
                 year = year+1
-        print "成功获取课表"
+                __EVENTTARGET = "ddlXQ"
+            else:
+                __EVENTTARGET = "ddlXN"
+        return 'ok'
 
 
     # 获取学生绩点

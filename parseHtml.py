@@ -49,24 +49,38 @@ def getClassScheduleFromHtml(response):
     html = response.content.decode("gb2312","ignore")
     soup = BeautifulSoup(html.decode("utf-8"), "html5lib")
     __VIEWSTATE = soup.findAll(name="input")[2]["value"]
-    trs = soup.find(id="Table1").find_all('tr')
+    table = soup.select("table")
+    if table:
+        trs = soup.find(id="DBGrid").find_all('tr')[1:]
+    else:
+        return None
+    oneClassKeys = ["selectClassCode","classNo","name", "Compulsory", "type", \
+                    "teacher","point", "totalTimeInWeek", "time",  "location"]
     classes = []
     for tr in trs:
         tds = tr.find_all('td')
+        oneClassValues = []
         for td in tds:
-            if td.string == None:
-                oneClassKeys = ["name", "type", "time", "teacher", "location"]
-                oneClassValues = []
-                for child in td.children:
-                    if child.string != None:
+            #if td.string == None:
+            for child in td.children:
+                if not unicode(child.string).startswith("\n"):
+                    if unicode(child.string) != u'\xa0':
                         oneClassValues.append(child.string)
-                while len(oneClassValues) < len(oneClassKeys):
-                    oneClassValues.append("")
-                oneClass = dict((key, value) for key, value in zip(oneClassKeys, oneClassValues))
-                oneClass["timeInTheWeek"] = oneClass["time"].split("{")[0][:2]
-                oneClass["timeInTheDay"] = oneClass["time"].split("{")[0][2:]
-                oneClass["timeInTheTerm"] = oneClass["time"].split("{")[1][:-1]
-                classes.append(oneClass)
+                    else:
+                        oneClassValues.append(None)
+        while len(oneClassValues) < len(oneClassKeys):
+            oneClassValues.append("")
+
+        oneClass = dict((key, value) for key, value in zip(oneClassKeys, oneClassValues))
+        if oneClass["time"]:
+            oneClass["timeInTheWeek"] = oneClass["time"].split("{")[0][:2]
+            oneClass["timeInTheDay"] = oneClass["time"].split("{")[0][2:]
+            oneClass["timeInTheTerm"] = oneClass["time"].split("{")[1][:-1]
+        else:
+            oneClass["timeInTheWeek"] = None
+            oneClass["timeInTheDay"] = None
+            oneClass["timeInTheTerm"] = None
+        classes.append(oneClass)
     return {"classes": classes, "__VIEWSTATE": __VIEWSTATE}
 
 
