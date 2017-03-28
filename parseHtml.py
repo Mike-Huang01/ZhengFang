@@ -98,8 +98,8 @@ def getGrade(response):
     Grades = []
     for tr in trs:
         tds = tr.findAll("td")
-        tds = tds[:2] + tds[3:5] + tds[6:9]
-        oneGradeKeys = ["year", "term", "name", "type", "credit","gradePonit","grade"]
+        tds = tds[0:5] + tds[6:9]
+        oneGradeKeys = ["year", "term", "classNo","name", "type", "credit","gradePonit","grade"]
         oneGradeValues = []
         for td in tds:
             oneGradeValues.append(td.string)

@@ -46,7 +46,7 @@ class Class(Model):
     type = CharField(null=True)  # 课程性质
     Compulsory = CharField(null=True) #　是否必修课
     teacher = CharField(null=True)  # 授课教师
-    point = CharField(null=True) #　学分
+    point = DoubleField(null=True) #　学分
     totalTimeInWeek = CharField(null=True) #　周学时
     timeInTheWeek = CharField(null=True)  # 星期几
     timeInTheDay = CharField(null=True)  # 第几节课
@@ -80,11 +80,9 @@ class TermGrade(Model):
 
 class OneLessonGrade(Model):
     term = ForeignKeyField(TermGrade, related_name="lessonsGrades")  # 归属学期
-    name = CharField(null=True)  # 课程名
-    type = CharField(null=True)  # 课程性质
-    credit = DoubleField(null=True)  # 学分
+    lesson = ForeignKeyField(Class, related_name="lessonsGrades")
     gradePoint = DoubleField(null=True)  # 绩点
-    grade = CharField(null=True)  # 成绩
+    grade = DoubleField(null=True)  # 成绩
 
     class Meta:
         database = db

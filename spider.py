@@ -103,7 +103,8 @@ class ZhengFangSpider:
     #获取学生课表
     def getClassSchedule(self):
         self.session.headers['Referer'] = self.baseUrl+"/xs_main.aspx?xh="+self.student.studentnumber
-        url = self.baseUrl + "/xsxkqk.aspx?xh=" + self.student.studentnumber + "&xm=" + self.student.urlName + "&gnmkdm=N121615"
+        urlsuffix = getSelectUrl(self.Loginresponse, u'学生选课情况查询')
+        url = self.baseUrl + '/' + urlsuffix
         response = self.session.get(url)
         parsedict = getClassScheduleFromHtml(response)
         __VIEWSTATE = parsedict["__VIEWSTATE"]
@@ -156,7 +157,8 @@ class ZhengFangSpider:
 
     # 获取学生绩点
     def getStudentGrade(self):
-        url = self.baseUrl + "/xscjcx.aspx?xh=" + self.student.studentnumber + "&xm=" + self.student.urlName + "&gnmkdm=N121605"
+        urlsuffix = getSelectUrl(self.Loginresponse, u'成绩查询')
+        url = self.baseUrl + '/' + urlsuffix
         self.session.headers['Referer'] = self.baseUrl + "/xs_main.aspx?xh=" + self.student.studentnumber
         response = self.session.get(url)
         __VIEWSTATE = get__VIEWSTATE(response)
@@ -165,6 +167,7 @@ class ZhengFangSpider:
             "__EVENTTARGET":"",
             "__EVENTARGUMENT":"",
             "__VIEWSTATE":__VIEWSTATE,
+            "__VIEWSTATEGENERATOR" : "9727EB43",
             'hidLanguage':"",
             "ddlXN":"",
             "ddlXQ":"",
@@ -176,6 +179,7 @@ class ZhengFangSpider:
         for onegrade in grades:
             year = onegrade["year"]
             term = onegrade["term"]
+            classNo = onegrade["classNo"]
             try:
                 yearGrade = YearGrade.get(YearGrade.year == year , YearGrade.student == self.student)
             except:
@@ -187,11 +191,22 @@ class ZhengFangSpider:
                 termGrade = TermGrade(year = yearGrade ,term = int(term))
                 termGrade.save()
             try:
+                lesson = Class.get(Class.classNo == classNo)
+            except:
+                schedule = ClassSchedule.get(ClassSchedule.year == year, ClassSchedule.term == term)
+                lesson = Class(schedule=schedule, classNo=classNo, name=onegrade["name"]
+                              ,type=onegrade["type"], point=float(onegrade["credit"]))
+                lesson.save()
+
+            try:
                 gradePoint = float(onegrade["gradePonit"])
+                grade = float(onegrade["grade"])
             except:
                 gradePoint = None
-            oneLessonGrade = OneLessonGrade(term=termGrade, name=onegrade["name"], type=onegrade["type"],
-                                            credit=float(onegrade["credit"]), gradePoint=gradePoint, grade=onegrade["grade"])
+                grade = None
+
+            oneLessonGrade = OneLessonGrade(lesson=lesson, term=termGrade, gradePoint=gradePoint,
+                                             grade=grade)
             oneLessonGrade.save()
         return 'ok'
 
