@@ -200,9 +200,12 @@ class ZhengFangSpider:
 
             try:
                 gradePoint = float(onegrade["gradePonit"])
-                grade = float(onegrade["grade"])
             except:
                 gradePoint = None
+
+            try:
+                grade = float(onegrade["grade"])
+            except:
                 grade = None
 
             oneLessonGrade = OneLessonGrade(lesson=lesson, term=termGrade, gradePoint=gradePoint,
