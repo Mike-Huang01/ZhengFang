@@ -59,6 +59,7 @@ The helper of ZhengFang System PKUHSC 欢迎fork/star<br>
 * 2017-3-22 完成login, getStudentBaseInfo
 * 2017-3-24 完成课表抓取测试
 * 2017-3-29 完成成绩抓取测试
+* 2017-3-29 完成成绩统计
 
 
 

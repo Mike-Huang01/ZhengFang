@@ -223,9 +223,11 @@ class ZhengFangSpider:
                 for grade in grades:
                         if grade.gradePoint == None:
                             continue
-                        sumGrade = sumGrade +(grade.credit * grade.gradePoint)
-                        sumCredit = sumCredit + grade.credit
-                termGPA = float( '%.2f'% (sumGrade/sumCredit))
+                        credit = OneLessonGrade.select(OneLessonGrade, Class)\
+                            .join(Class).where(Class.id == grade.lesson_id).get().lesson.point
+                        sumGrade = sumGrade +(credit * grade.gradePoint)
+                        sumCredit = sumCredit + credit
+                termGPA = round((sumGrade/sumCredit), 2)
                 term.termGPA = termGPA
                 term.termCredit = sumCredit
                 term.save()
@@ -234,10 +236,10 @@ class ZhengFangSpider:
             for term in terms:
                 sumGrade += term.termGPA*term.termCredit
                 sumCredit += term.termCredit
-            year.yearGPA = float('%.2f' % (sumGrade/sumCredit))
+            year.yearGPA = round((sumGrade/sumCredit), 2)
             year.yearCredit = sumCredit
             year.save()
-        print "绩点计算完毕"
+        return 'ok'
 
 
 if __name__ == "__main__":
