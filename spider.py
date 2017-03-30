@@ -265,7 +265,7 @@ if __name__ == "__main__":
     spider.login()
     if student.name is None:
         spider.getStudentBaseInfo()
+    spider.getClassSchedule()
     spider.getStudentGrade()
     spider.calculateOneTermAndOneYearGPA()
-    spider.getClassSchedule()
 
